@@ -1,49 +1,62 @@
 # temp_electricity
-## Overview
-Temperature Electricity (Placeholder name) is an Ontario electricity consumption mapping tool. The goal is 
-to create a visualization tool that will map the effect of temperature changes on electricity consumption 
-at an FSA level in the province of Ontario. This visualization is to be done as a heatmap containing every 
-Ontario FSA, where the user is able to adjust the temperature using a slider to see how consumption changes 
-across the FSAs. 
 
-The project will include the pulling and cleaning scripts needed to pull and process the raw data, the scripts
-used for our temperature-electricity model, and the final visualization tool. 
+## Overview
+Temperature Electricity (placeholder name) is an Ontario electricity consumption mapping tool. The goal is
+to map the effect of temperature changes on electricity consumption at the Forward Sortation Area (FSA) level
+in Ontario. The visualization will be a heatmap of every Ontario FSA, with a temperature slider so users can
+see how consumption changes across FSAs.
+
+The project includes the scripts to pull and clean the raw data, the temperature–electricity model, and the
+final visualization tool.
 
 ## Motivation
-The motivation behind the tool is to understand the socio-economic impacts of temperature changes on people's 
-livelihoods. As climate change causes rapid and severe changes to weather patterns, the need for impact and 
-risk assessment is increasing. 
+The motivation behind the tool is to understand the socio-economic impacts of temperature changes on people's
+livelihoods. As climate change causes rapid and severe changes to weather patterns, the need for impact and
+risk assessment is increasing.
 
-We believe our tool will fill a gap in publicly available information. While the IESO has done internal 
-capacity assessment and risk analysis, it has not released this information publicly. There exist public tools
-for electricity capacity visualization, such as [Electricitymaps.com](https://app.electricitymaps.com/map/fifteen_minutes), but many features are locked behind a paywall, with the accessible data being limited to regional level grid information. 
+We believe our tool will fill a gap in publicly available information. While the IESO has done internal
+capacity assessment and risk analysis, it has not released this information publicly. Public tools for
+electricity visualization exist, such as [Electricity Maps](https://app.electricitymaps.com/map/fifteen_minutes),
+but many features are behind a paywall, and the free data is limited to regional grid-level information.
 
-Our tool is useful for both businesses and individuals, it is public, and it could potentially be scaled through partnership with regional operators to access their information. We are currently limited to Ontario, 
-as the IESO publicly releases electricity consumption information at the level we require. 
+Our tool is public and useful for both businesses and individuals, and it could be scaled through partnerships
+with regional operators. We are currently limited to Ontario, as the IESO publicly releases electricity
+consumption data at the FSA level.
 
-## Data and licensing
-The software, dependencies, and bundled assets use open licenses. The public data is fetched from the public 
-government and open source services 
+## Data sources and licensing
+The software and dependencies use open licenses. All data is fetched from public sources by the code in this
+repository; no data files are committed.
 
-We will be using data from three separate sources:
-1. Hourly Ontario FSA electricity consumption data from the IESO, found [here](https://reports-public.ieso.ca/public/HourlyConsumptionByFSA/?C=M;O=A)
-2. Hourly temperature data from [here](https://open-meteo.com/en/docs/historical-weather-api)
-NOTE: The API is limiting us at the moment but we have a possible alternative
-3. Statistics Canada FSA Geolocation data, found [here](https://github.com/sachijay/canada_maps)
+1. **Electricity consumption:** IESO, *Hourly Consumption by Forward Sortation Area*, residential and small
+   business customers, monthly files from 2018 onward.
+   [reports-public.ieso.ca/public/HourlyConsumptionByFSA](https://reports-public.ieso.ca/public/HourlyConsumptionByFSA/)
+2. **Temperature:** Copernicus Climate Change Service (C3S), *ERA5-Land hourly time-series data from 1950 to
+   present*, hourly 2 m temperature at each FSA's grid point (~9 km), 2018 onward.
+   DOI: [10.24381/ee82e357](https://doi.org/10.24381/ee82e357). Licence: CC-BY 4.0.
+3. **FSA boundaries:** Statistics Canada, 2021 Census Forward Sortation Area boundary file, via the
+   simplified version in [sachijay/canada_maps](https://github.com/sachijay/canada_maps).
+
+## Setup
+Requires [uv](https://docs.astral.sh/uv/).
+
+    uv sync
+    uv run jupyter lab
+
+The temperature download needs a free [Copernicus CDS](https://cds.climate.copernicus.eu) account:
+1. Accept the licence on the ERA5-Land time-series dataset page.
+2. Save your API key in `~/.cdsapirc` (never in this repository):
+
+       url: https://cds.climate.copernicus.eu/api
+       key: <your-key>
 
 ## Repository
-As of 2026-10-06, the repository is organized as follows:
-temp_electricity/
-│
-├── README.md
-├── pyproject.toml
-├── uv.lock
-├── .gitignore
-│
-├── src/
-│
-├── tests/
-│
-├── data/
-│
-└── notebooks/
+As of 2026-10-06:
+
+    temp_electricity/
+    ├── README.md
+    ├── LICENSE
+    ├── pyproject.toml
+    ├── uv.lock
+    ├── .gitignore
+    ├── fsa_temperature.ipynb   # FSA boundaries + hourly temperature per FSA
+    └── data/                   # created by the notebook; not committed
