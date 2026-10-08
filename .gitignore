@@ -215,3 +215,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project data (re-downloadable)
+data/
+*.parquet
+*.gpkg
+*.geojson
+*.csv
+*.nc
