@@ -5,6 +5,7 @@ requires-python = ">=3.14"
 dependencies = [
     "cdsapi>=0.7.7",
     "geopandas>=1.2.0",
+    "holidays>=0.106",
     "ipykernel>=7.4.0",
     "jupyter>=1.1.1",
     "jupyterlab>=4.6.4",
