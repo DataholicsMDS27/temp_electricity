@@ -223,3 +223,7 @@ data/
 *.geojson
 *.csv
 *.nc
+
+# Bundled public map geometry is part of the explorer, not training data.
+!energy-explorer/public/data/
+!energy-explorer/public/data/**

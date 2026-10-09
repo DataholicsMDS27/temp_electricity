@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: ontario-energy-explorer
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PORT
+        value: 10000
