@@ -8,9 +8,11 @@ dependencies = [
     "ipykernel>=7.4.0",
     "jupyter>=1.1.1",
     "jupyterlab>=4.6.4",
+    "lightgbm>=4.7.0",
     "matplotlib>=3.11.2",
     "numpy>=2.5.3",
     "pandas>=3.0.6",
     "pyarrow>=25.0.1",
     "requests>=2.34.2",
+    "scikit-learn>=1.9.1",
 ]
