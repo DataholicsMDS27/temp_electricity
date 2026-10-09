@@ -2,6 +2,7 @@ services:
   - type: web
     name: ontario-energy-explorer
     runtime: docker
+    branch: energy-explorer-ui
     plan: free
     rootDir: energy-explorer
     healthCheckPath: /api/health
