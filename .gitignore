@@ -217,9 +217,11 @@ __marimo__/
 .streamlit/secrets.toml
 
 # Project data (re-downloadable)
-data/
 *.parquet
 *.gpkg
 *.geojson
 *.csv
 *.nc
+
+# Exception: shared prediction output
+!data/final_predictions_22-26/grid_predictions.parquet
