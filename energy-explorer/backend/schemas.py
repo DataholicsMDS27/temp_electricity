@@ -4,10 +4,10 @@ from pydantic import BaseModel, Field, ConfigDict
 
 class Scenario(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    temperature_c: int = Field(ge=-40, le=35, strict=True)
+    temperature_c: int = Field(ge=-30, le=30, strict=True)
     day_type: Literal["weekday", "weekend"]
     hour: int = Field(ge=0, le=23, strict=True)
-
+    customer_type: Literal[1, 2] = 1
 
 class Prediction(BaseModel):
     fsa: str = Field(pattern=r"^[KLMNP][0-9][A-Z]$")

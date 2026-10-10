@@ -44,14 +44,19 @@ def metadata(request: Request):
         "model_version": predictor.model_version,
         "is_mock": predictor.is_mock,
         "supported_fsas": request.app.state.fsas,
-        "temperature": {"min": -40, "max": 35, "step": 1},
+        "temperature": {"min": -30, "max": 30, "step": 1},
         "day_types": ["weekday", "weekend"],
         "interval_minutes": 60,
         "metric": "average_energy_per_customer",
         "unit": "kWh",
         "boundary_version": "statcan-2021",
         "time_convention": predictor.time_convention,
-        "legend": {"min": 0, "max": 4, "unit": "kWh/customer", "note": "Fixed demo scale; calibrate before real-model deployment"},
+        "legend": {
+            "min": request.app.state.predictor.pred_min,
+            "max": request.app.state.predictor.pred_max,
+            "unit": "kWh/customer",
+            "note": "Range of precomputed predictions",
+            },
     }
 
 

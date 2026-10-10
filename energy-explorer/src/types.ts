@@ -1,6 +1,11 @@
 export type DayType = 'weekday' | 'weekend';
 export type Theme = 'light' | 'dark' | 'daylight';
-export interface Scenario { temperature_c: number; day_type: DayType; hour: number }
+export interface Scenario {
+  temperature_c: number;
+  day_type: DayType;
+  hour: number;
+  customer_type: 1 | 2;
+}
 export interface Prediction { fsa: string; value: number | null; status: 'ok' | 'unsupported' | 'unavailable' }
 export interface PredictionResponse {
   request_id: string; scenario: Scenario; model_version: string; is_mock: boolean;
@@ -17,4 +22,11 @@ export interface Metadata {
 }
 export const hourLabel = (hour: number) => `${String(hour).padStart(2, '0')}:00`;
 export const intervalLabel = (hour: number) => `${hourLabel(hour)}–${hourLabel((hour + 1) % 24)}`;
-export const sameScenario = (a: Scenario, b: Scenario) => a.hour === b.hour && a.day_type === b.day_type && a.temperature_c === b.temperature_c;
+export const sameScenario = (
+  a: Scenario,
+  b: Scenario
+) =>
+  a.hour === b.hour &&
+  a.day_type === b.day_type &&
+  a.temperature_c === b.temperature_c &&
+  a.customer_type === b.customer_type;
