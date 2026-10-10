@@ -33,8 +33,17 @@ export function EnergyMap({ geometry, dark, result, selected, onSelect, legend }
   const [firstSymbol, setFirstSymbol] = useState<string>();
   const [hover, setHover] = useState<{ fsa: string; lng: number; lat: number } | null>(null);
   const values = useMemo(() => new MapValues(result), [result]);
-  const data = useMemo(() => ({ ...geometry, features: geometry.features.map(f => ({ ...f, properties: { ...f.properties, value: values.get(f.properties.fsa)?.value ?? null } })) }), [geometry, values]);
-  const color = useMemo<ExpressionSpecification>(() => ['case', ['==', ['get', 'value'], null], dark ? '#647078' : '#c6ced1', ['interpolate', ['linear'], ['get', 'value'], ...PALETTE.flatMap((c, i) => [legend.min + i * (legend.max - legend.min) / (PALETTE.length - 1), c])]], [dark, legend]);
+  useEffect(() => {
+  const map = ref.current?.getMap();
+  if (!map || !loaded || !map.getSource('ontario-fsas')) return;
+  geometry.features.forEach(f => {
+    map.setFeatureState(
+      { source: 'ontario-fsas', id: f.properties.fsa },
+      { value: values.get(f.properties.fsa)?.value ?? null }
+    );
+  });
+}, [geometry, loaded, values]);
+  const color = useMemo<ExpressionSpecification>(() => ['case', ['==', ['feature-state', 'value'], null], dark ? '#647078' : '#c6ced1', ['interpolate', ['linear'], ['feature-state', 'value'], ...PALETTE.flatMap((c, i) => [legend.min + i * (legend.max - legend.min) / (PALETTE.length - 1), c])]], [dark, legend]);
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const fit = (bounds: [[number, number], [number, number]]) => ref.current?.fitBounds(bounds, { padding: { top: 50, bottom: 80, left: 30, right: 30 }, duration: reducedMotion ? 0 : 700 });
   useEffect(() => {
@@ -61,7 +70,7 @@ export function EnergyMap({ geometry, dark, result, selected, onSelect, legend }
       }}
       onError={(event) => { if (event.error.message.includes('tiles.openfreemap.org') || event.error.message.includes('basemap-')) setFallback(true); }}
       onClick={selectPoint} onMouseMove={hoverPoint} onMouseLeave={() => setHover(null)} attributionControl={{ compact: true }}>
-      <Source id="ontario-fsas" type="geojson" data={data} attribution="FSA boundaries: Statistics Canada, 2021 Census">
+      <Source id="ontario-fsas" type="geojson" data={geometry} promoteId="fsa" attribution="FSA boundaries: Statistics Canada, 2021 Census">
         <Layer id="fsa-fill" type="fill" beforeId={firstSymbol} paint={{ 'fill-color': color, 'fill-opacity': result ? 0.85 : 0.32 }} />
         <Layer id="fsa-outline" type="line" beforeId={firstSymbol} paint={{ 'line-color': dark ? '#b9cfcb' : '#ffffff', 'line-width': ['interpolate', ['linear'], ['zoom'], 4, 0.45, 9, 1], 'line-opacity': 0.7 }} />
         <Layer id="fsa-selected" type="line" filter={['==', ['get', 'fsa'], selected?.fsa ?? '']} paint={{ 'line-color': dark ? '#d4f783' : '#043f42', 'line-width': 3 }} />
@@ -83,7 +92,7 @@ export function EnergyMap({ geometry, dark, result, selected, onSelect, legend }
       <div className="legend-panel">
         <div className="legend-title">Average consumption <span>kWh / customer</span></div>
         <div className="legend-ramp" style={{ background: `linear-gradient(to right, ${PALETTE.join(',')})` }} />
-        <div className="legend-ticks">{[0, 1, 2, 3, 4].map(i => <span key={i}>{(legend.min + (legend.max - legend.min) * i / 4).toFixed(0)}{i === 4 ? '+' : ''}</span>)}</div>
+        <div className="legend-ticks">{[0, 1, 2, 3, 4, 5].map(i => <span key={i}>{(legend.min + (legend.max - legend.min) * i / 5).toFixed(1)}{i === 5 ? '+' : ''}</span>)}</div>
         <div className="legend-footer"><span><i /> No prediction</span><span>Fixed scale · 1-hour interval</span></div>
       </div>
       {selected && <div className="selection-panel" aria-live="polite">

@@ -4,6 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.14"
 dependencies = [
     "cdsapi>=0.7.7",
+    "fastapi>=0.143.0",
     "geopandas>=1.2.0",
     "ipykernel>=7.4.0",
     "jupyter>=1.1.1",
@@ -15,4 +16,5 @@ dependencies = [
     "pyarrow>=25.0.1",
     "requests>=2.34.2",
     "scikit-learn>=1.9.1",
+    "uvicorn>=0.54.0",
 ]

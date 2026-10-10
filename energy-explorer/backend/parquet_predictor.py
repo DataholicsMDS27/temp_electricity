@@ -14,6 +14,7 @@ class ParquetPredictor:
     is_mock = False
 
     def __init__(self, parquet_path: str | Path):
+        self.time_convention = "local"
         path = Path(parquet_path)
 
         if not path.is_file():
@@ -91,8 +92,9 @@ class ParquetPredictor:
             df["fsa"].unique().tolist()
         )
 
-        self.pred_min = float(df["pred"].min())
-        self.pred_max = float(df["pred"].max())
+        # Fixed colour scale to make typical consumption differences visible.
+        self.pred_min = 0.0
+        self.pred_max = 5.5
 
         del df
 

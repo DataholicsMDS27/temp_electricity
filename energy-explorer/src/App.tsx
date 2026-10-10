@@ -212,7 +212,7 @@ export default function App() {
           setPending(false);
         }
       }
-    }, 120);
+    }, 60);
 
     return () => {
       active = false;
