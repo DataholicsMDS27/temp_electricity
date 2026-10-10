@@ -55,18 +55,10 @@ def to_cat(df, fsa_cats):
     df["customer_type"] = pd.Categorical(df["customer_type"], categories=[1, 2])
     return df
 
-# ---------- build training data (2022-2024) ----------
-df, bad_fsas = build("2022-01", "2024-12")
+df, bad_fsas = build("2022-01", "2026-05")
 fsa_cats = sorted(df["fsa"].unique())
 df = to_cat(df, fsa_cats)
 print(df.dtypes, f"\n{len(df):,} rows, {df.memory_usage(deep=True).sum()/1e9:.2f} GB")
-
-# ---------- time-based split: tune on 2022-23, validate on 2024 ----------
-#tr = df[df["ym"] <= 202312]
-#va = df[df["ym"] >= 202401]
-#SAMPLE_FRAC = None                 # e.g. 0.1 for a quick timing run
-#if SAMPLE_FRAC:
-#    tr = tr.sample(frac=SAMPLE_FRAC, random_state=0)
 
 params = dict(
     objective="regression", learning_rate=0.05, n_estimators=5000,
@@ -75,74 +67,67 @@ params = dict(
     reg_lambda=5.0, max_bin=511, cat_smooth=20, min_data_per_group=200,
     n_jobs=10, random_state=0, verbose=-1,
 )
-
-#model = lgb.LGBMRegressor(**params)
-#model.fit(
-#    tr[FEATURES], tr[TARGET],
-#    eval_set=[(va[FEATURES], va[TARGET])],
-#    categorical_feature=["fsa", "customer_type"],
-#    callbacks=[lgb.early_stopping(100), lgb.log_evaluation(100)],
-#)
-#best_n = model.best_iteration_
 best_n = 2435
-
-# ---------- baseline: mean by fsa/customer_type/day/hour, ignoring temperature ----------
-#keys = ["fsa", "customer_type", "day", "hour"]
-#base = tr.groupby(keys, observed=True)[TARGET].mean().rename("base").reset_index()
-#vb = va.merge(base, on=keys, how="left")
-#vb["base"] = vb["base"].fillna(float(tr[TARGET].mean()))
-
 def report(name, y, p):
     print(f"{name:10s} MAE={mean_absolute_error(y, p):.4f}  "
           f"RMSE={np.sqrt(mean_squared_error(y, p)):.4f}")
 
-#report("baseline", vb[TARGET], vb["base"])
-#pred_va = model.predict(va[FEATURES])
-#report("lightgbm", va[TARGET], pred_va)
-#for ct in [1, 2]:                                       # check each customer type separately
-#    m = (va["customer_type"] == ct).to_numpy()
-#    report(f"  type {ct}", va.loc[m, TARGET], pred_va[m])
-
-# ---------- final fit on all of 2022-2024 ----------
 final = lgb.LGBMRegressor(**{**params, "n_estimators": best_n})
 final.fit(df[FEATURES], df[TARGET], categorical_feature=["fsa", "customer_type"])
 final.booster_.save_model("lgbm_final.txt")
 
-# ---------- test once on 2025-26 (set end to your last available month) ----------
-te, _ = build("2025-01", "2026-05", drop_fsas=bad_fsas)
-te = te[te["fsa"].isin(fsa_cats)]                       # drop FSAs unseen in training
-te = to_cat(te, fsa_cats)
-report("test lgbm", te[TARGET], final.predict(te[FEATURES]))
+## Fitting the grid
+# ---------- settings ----------
+T_LO, T_HI = -30, 30                # slider range shown in the app
+PAD_LO, PAD_HI = -37, 35            # wider grid, matching the range in your data
+temps_wide = np.arange(PAD_LO, PAD_HI + 1, dtype="float32")
+n_wide = len(temps_wide)
+lo = int(np.flatnonzero(temps_wide == T_LO)[0])
+hi = int(np.flatnonzero(temps_wide == T_HI)[0]) + 1
+temps = temps_wide[lo:hi]           # displayed temperatures
+n_temps = len(temps)
 
-# ---------- test baseline on 2025-26  ----------
-keys = ["fsa", "customer_type", "day", "hour"]
+# ---------- build the grid (temperature varies fastest) ----------
+idx = pd.MultiIndex.from_product(
+    [fsa_cats, [1, 2], [0, 1], range(1, 25), temps_wide],
+    names=["fsa", "customer_type", "day", "hour", "temperature"],
+)
+grid = idx.to_frame(index=False)
+grid["fsa"] = pd.Categorical(grid["fsa"], categories=fsa_cats)
+grid["customer_type"] = pd.Categorical(grid["customer_type"], categories=[1, 2])
+grid["day"] = grid["day"].astype("int8")
+grid["hour"] = grid["hour"].astype("int8")
+grid["temperature"] = grid["temperature"].astype("float32")
+print(f"{len(grid):,} grid rows")
 
-# baseline learned from the training data (2022-2024), not from the test rows
-base_train = (df.groupby(keys, observed=True)[TARGET].mean()
-                .rename("base").reset_index())
+# ---------- predict ----------
+pred = final.predict(grid[FEATURES]).astype("float32")
 
-pred_te = final.predict(te[FEATURES])                    # predict once and reuse below
+curves = pred.reshape(-1, n_wide)   # one row per curve
+meta = (grid.iloc[::n_wide][["fsa", "customer_type", "day", "hour"]]
+            .reset_index(drop=True))
+assert len(meta) == curves.shape[0]
+del grid, pred
 
-tb = te.merge(base_train, on=keys, how="left")           # left join keeps te's row order
-print(f"test rows with no training cell: {tb['base'].isna().mean():.3%}")
-tb["base"] = tb["base"].fillna(float(df[TARGET].mean()))
-tb["pred"] = pred_te
+# ---------- smooth on the wide grid, then crop to the slider range ----------
+curves_s = np.clip(
+    savgol_filter(curves, window_length=9, polyorder=2, axis=1, mode="nearest"),
+    0, None,
+).astype("float32")
 
-report("baseline", tb[TARGET], tb["base"])
-report("lightgbm", tb[TARGET], tb["pred"])
+arr   = curves[:, lo:hi]            # raw predictions, -30 to +30
+arr_s = curves_s[:, lo:hi]          # smoothed predictions, -30 to +30
 
-# by customer type
-for ct in [1, 2]:
-    m = (tb["customer_type"] == ct).to_numpy()
-    report(f"  type {ct} base", tb.loc[m, TARGET], tb.loc[m, "base"])
-    report(f"  type {ct} lgbm", tb.loc[m, TARGET], tb.loc[m, "pred"])
+# ---------- long format output ----------
+out = meta.loc[meta.index.repeat(n_temps)].reset_index(drop=True)
+out["temperature"] = np.tile(temps, len(meta))
+out["pred_raw"] = arr.ravel()
+out["pred"] = arr_s.ravel()
+out.to_parquet("grid_predictions.parquet", index=False)
 
-# by temperature bin
-tb["t_bin"] = pd.cut(tb["temperature"], [-50, -15, -5, 5, 15, 25, 30, 50])
-out_te = tb.groupby("t_bin", observed=True).apply(
-    lambda g: pd.Series({
-        "n": len(g),
-        "baseline_rmse": np.sqrt(((g[TARGET] - g["base"]) ** 2).mean()),
-        "lgbm_rmse": np.sqrt(((g[TARGET] - g["pred"]) ** 2).mean()),
-    }))
-print(out_te)
+# ---------- sanity checks ----------
+print(f"{len(out):,} rows, {len(meta):,} curves, temps {temps[0]:.0f} to {temps[-1]:.0f}")
+print("NaNs:", int(np.isnan(arr_s).sum()),
+      "| curves touching zero:", int((arr_s.min(axis=1) == 0).sum()))
+gap = np.abs(arr_s - arr).max(axis=1) / arr.mean(axis=1)
+print(f"largest smoothed-vs-raw gap: {gap.max():.1%}, median: {np.median(gap):.1%}")
