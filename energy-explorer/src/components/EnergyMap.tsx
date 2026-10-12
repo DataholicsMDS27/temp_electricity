@@ -33,16 +33,28 @@ export function EnergyMap({ geometry, dark, result, selected, onSelect, legend }
   const [firstSymbol, setFirstSymbol] = useState<string>();
   const [hover, setHover] = useState<{ fsa: string; lng: number; lat: number } | null>(null);
   const values = useMemo(() => new MapValues(result), [result]);
+  // Feature state lives on the source, and a theme change swaps the whole map style,
+  // which recreates the source empty. Re-apply the values once it has reloaded.
   useEffect(() => {
-  const map = ref.current?.getMap();
-  if (!map || !loaded || !map.getSource('ontario-fsas')) return;
-  geometry.features.forEach(f => {
-    map.setFeatureState(
-      { source: 'ontario-fsas', id: f.properties.fsa },
-      { value: values.get(f.properties.fsa)?.value ?? null }
-    );
-  });
-}, [geometry, loaded, values]);
+    const map = ref.current?.getMap();
+    if (!map || !loaded) return;
+    const apply = () => {
+      if (!map.getSource('ontario-fsas')) return;
+      geometry.features.forEach(f => {
+        map.setFeatureState(
+          { source: 'ontario-fsas', id: f.properties.fsa },
+          { value: values.get(f.properties.fsa)?.value ?? null }
+        );
+      });
+    };
+    apply();
+    const onSourceData = (event: { sourceId?: string; isSourceLoaded?: boolean }) => {
+      if (event.sourceId === 'ontario-fsas' && event.isSourceLoaded) apply();
+    };
+    map.on('sourcedata', onSourceData);
+    map.on('styledata', apply);
+    return () => { map.off('sourcedata', onSourceData); map.off('styledata', apply); };
+  }, [geometry, loaded, values, dark, fallback]);
   const color = useMemo<ExpressionSpecification>(() => ['case', ['==', ['feature-state', 'value'], null], dark ? '#647078' : '#c6ced1', ['interpolate', ['linear'], ['feature-state', 'value'], ...PALETTE.flatMap((c, i) => [legend.min + i * (legend.max - legend.min) / (PALETTE.length - 1), c])]], [dark, legend]);
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const fit = (bounds: [[number, number], [number, number]]) => ref.current?.fitBounds(bounds, { padding: { top: 50, bottom: 80, left: 30, right: 30 }, duration: reducedMotion ? 0 : 700 });
