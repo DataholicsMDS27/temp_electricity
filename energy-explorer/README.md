@@ -12,11 +12,15 @@ python3 -m venv .venv
 .venv/bin/python -m pip install -r backend/requirements.lock.txt
 ```
 
-Start the API and frontend in separate terminals:
+Start the API and frontend in separate terminals. To serve the real predictions:
 
 ```bash
+ENERGY_PREDICTOR=backend.parquet_predictor:create_predictor \
+ENERGY_PREDICTIONS_PARQUET=../data/final_predictions_22-26/grid_predictions.parquet \
 .venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
 ```
+
+Omit the two environment variables to run the synthetic demo formula instead.
 
 ```bash
 npm run dev
@@ -26,7 +30,7 @@ Open http://127.0.0.1:5173. API documentation is at http://127.0.0.1:8000/docs.
 
 ## Features
 
-- Temperature from −40 to 35 °C in 1 °C steps, applied to all FSAs.
+- Temperature from −30 to 30 °C in 1 °C steps, applied to all FSAs, for residential or small-business customers.
 - Weekday/weekend selection and a looping hourly interval wheel.
 - Solid Light and Dark themes; Daylight's pixel sky follows the chosen hour.
 - Daylight uses the light basemap from 06:00 to 18:00, otherwise dark. This is a decorative clock cycle, not an astronomical sunrise calculation.
@@ -34,7 +38,7 @@ Open http://127.0.0.1:5173. API documentation is at http://127.0.0.1:8000/docs.
 - Fixed consumption scale, explicit missing values, submit/loading/error/retry states, and results labelled with their submitted scenario.
 - Local font files and static boundary geometry; external basemap tiles have a bundled Natural Earth fallback.
 
-**Predictions are synthetic demo values until a real provider is connected.** No consumption training dataset has been supplied to this app. The demo formula is deterministic and is not a fitted energy model.
+**Predictions come from a trained LightGBM model**, precomputed on a grid and served from `data/final_predictions_22-26/grid_predictions.parquet` by `backend/parquet_predictor.py`. Without `ENERGY_PREDICTOR` set, the API falls back to a deterministic synthetic demo formula (`is_mock=true`, labelled as such in the UI).
 
 ## Plug in the model
 
@@ -71,7 +75,7 @@ def create_predictor():
 
 Set `ENERGY_PREDICTOR=your_package:create_predictor` when starting the API. A configured provider failure stops startup; it never silently falls back to the mock. Missing returned FSAs are completed as unsupported; duplicate/unknown FSA identifiers, negative/non-finite values, and inconsistent statuses are rejected. Inference runs in a thread so it does not block the server event loop; providers should handle concurrent calls safely or serialize internally.
 
-Before integration, reconcile your supported FSA list with `public/data/fsa-index.json`, confirm timezone and valid temperature limits, and calibrate the fixed legend in `/api/v1/metadata` (currently 0–4 kWh/customer for the demo). The temperature request schema and metadata must be updated together if model limits change. Customer averages are not summed into provincial totals.
+Before integration, reconcile your supported FSA list with `public/data/fsa-index.json`, confirm timezone and valid temperature limits, and calibrate the fixed legend in `/api/v1/metadata` (currently 0–5.5 kWh/customer for the Parquet predictor and 0–4 for the demo). The temperature request schema and metadata must be updated together if model limits change. Customer averages are not summed into provincial totals.
 
 ## Data provenance
 
@@ -95,7 +99,8 @@ npm run verify # requires the API on port 8000
 The production entrypoint serves the built frontend and Python API from the same origin. The Docker image builds the frontend, installs locked Python dependencies, and runs as an unprivileged user. Hosting supplies HTTPS and the public hostname. A database is not required for this MVP.
 
 ```bash
-docker build -t ontario-energy-explorer .
+# From the repository root, so the image can include data/final_predictions_22-26/
+docker build -f energy-explorer/Dockerfile -t ontario-energy-explorer .
 docker run --rm -p 10000:10000 ontario-energy-explorer
 ```
 
@@ -103,11 +108,11 @@ Open http://localhost:10000. Without Docker, run `npm run build` then `.venv/bin
 
 ### Render
 
-In the team repository, use the **root** `render.yaml`; it sets `rootDir: energy-explorer`. For a manual service, select the app branch and set Root Directory to `energy-explorer`, Dockerfile to `./Dockerfile`, and health check to `/api/health`.
+Use the **root** `render.yaml`; it builds with the repository root as the Docker context (`dockerContext: .`, `dockerfilePath: ./energy-explorer/Dockerfile`). For a manual service, leave Root Directory empty, set the Dockerfile path to `./energy-explorer/Dockerfile`, and the health check to `/api/health`.
 
 For the full trained-model handoff and runnable integration checker, see [MODEL_INTEGRATION.md](docs/MODEL_INTEGRATION.md).
 
-Push this directory as a Git repository, connect it in the Render dashboard, and create a Blueprint using the included `render.yaml`. It defines one Docker web service with `/api/health` checks. Alternatively create a Docker web service manually from this repository, using the root Dockerfile and the same health-check path. Share the HTTPS URL Render assigns after the deployment is live.
+Connect the repository in the Render dashboard and create a Blueprint from the root `render.yaml`. It defines one Docker web service with `/api/health` checks. Share the HTTPS URL Render assigns after the deployment is live.
 
 The Blueprint selects the free plan to avoid initiating paid hosting. Free Render web services sleep after 15 minutes without requests, so the first visit after inactivity can be slower. Choose a paid instance in the dashboard if you need an always-on presentation. See [Render's free service limits](https://render.com/docs/free).
 

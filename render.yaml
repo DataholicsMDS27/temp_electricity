@@ -4,9 +4,10 @@ services:
     runtime: docker
     branch: main
     plan: free
-    rootDir: energy-explorer
+    # Build from the repo root so the image can include data/final_predictions_22-26.
+    dockerContext: .
+    dockerfilePath: ./energy-explorer/Dockerfile
     healthCheckPath: /api/health
-    dockerfilePath: ./Dockerfile
     envVars:
       - key: PORT
         value: 10000

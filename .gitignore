@@ -225,4 +225,3 @@ __marimo__/
 
 # Exception: shared prediction output
 !data/final_predictions_22-26/grid_predictions.parquet
-!energy-explorer/data/grid_predictions.parquet

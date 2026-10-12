@@ -47,13 +47,19 @@ const themes = [
 ] as const;
 
 const temperatureDescription = (temperature: number) =>
-  temperature < 0
-    ? 'A little on the cold side.'
-    : temperature < 15
-      ? 'A cooler kind of day.'
-      : temperature < 26
-        ? 'A comfortable kind of day.'
-        : 'Turning up the heat.';
+  temperature <= -20
+    ? 'Bitterly cold.'
+    : temperature < -10
+      ? 'Deep winter cold.'
+      : temperature < 0
+        ? 'A little on the cold side.'
+        : temperature < 15
+          ? 'A cooler kind of day.'
+          : temperature < 26
+            ? 'A comfortable kind of day.'
+            : temperature < 30
+              ? 'Turning up the heat.'
+              : 'A scorcher.';
 
 function storedTheme(): Theme {
   try {
@@ -762,6 +768,54 @@ export default function App() {
                   : 'The demo formula is not trained on consumption data and should only be used to demonstrate the interface.'}
               </p>
 
+              {visibleMock === false && (
+                <>
+                  <h3>How it works</h3>
+                  <ul>
+                    <li>
+                      <strong>Data.</strong> Hourly electricity use per
+                      customer in each FSA from the IESO (residential and
+                      small business under 50 kW), January 2022 to May 2026,
+                      matched with hourly ERA5-Land temperature at each FSA.
+                    </li>
+                    <li>
+                      <strong>Model.</strong> A gradient-boosted tree model
+                      (LightGBM) learns consumption from FSA, hour, weekday
+                      or weekend/holiday, customer type and temperature.
+                      Predictions are precomputed for every combination and
+                      smoothed across temperature.
+                    </li>
+                    <li>
+                      <strong>Your scenario.</strong> The temperature you pick
+                      is applied to every FSA at once. It is a what-if, not a
+                      forecast.
+                    </li>
+                  </ul>
+
+                  <h3>Good to know</h3>
+                  <ul>
+                    <li>
+                      The colour scale is fixed from 0 to {legend.max} kWh so
+                      scenarios stay comparable. Higher values are shown in the
+                      darkest shade.
+                    </li>
+                    <li>
+                      Very cold and very hot hours are rare in the training
+                      data, so estimates at the extremes are less certain.
+                    </li>
+                    <li>
+                      Grey areas have no prediction, for example FSAs without
+                      complete temperature records. Customers on the ultra-low
+                      overnight price plan are excluded.
+                    </li>
+                    <li>
+                      Values are averages per customer, not totals, so they
+                      are not added up into provincial figures.
+                    </li>
+                  </ul>
+                </>
+              )}
+
               <p>
                 Boundaries are census-derived 2021 FSAs. Daylight
                 mode is a playful sky cycle, with a dark map from
@@ -773,14 +827,29 @@ export default function App() {
                   'Training timezone convention will be confirmed at model integration.'}
               </p>
 
-              <a
-                href="https://www150.statcan.gc.ca/n1/en/catalogue/92-179-X2021001"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Statistics Canada boundary source{' '}
-                <ArrowUpRight size={14} />
-              </a>
+              <p className="about-links">
+                <a
+                  href="https://reports-public.ieso.ca/public/HourlyConsumptionByFSA/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  IESO consumption data <ArrowUpRight size={14} />
+                </a>
+                <a
+                  href="https://doi.org/10.24381/ee82e357"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  ERA5-Land temperature <ArrowUpRight size={14} />
+                </a>
+                <a
+                  href="https://www150.statcan.gc.ca/n1/en/catalogue/92-179-X2021001"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Statistics Canada boundaries <ArrowUpRight size={14} />
+                </a>
+              </p>
             </Dialog.Content>
           </Dialog.Overlay>
         </Dialog.Portal>

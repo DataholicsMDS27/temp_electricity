@@ -21,7 +21,7 @@ class ProductionTests(unittest.TestCase):
             self.assertEqual(client.get("/api/health").json()["status"], "ok")
             metadata = client.get("/api/v1/metadata").json()
             response = client.post("/api/v1/predictions", json={
-                "temperature_c": -40, "day_type": "weekend", "hour": 23,
+                "temperature_c": -30, "day_type": "weekend", "hour": 23,
             })
             self.assertEqual(response.status_code, 200)
             self.assertEqual({row["fsa"] for row in response.json()["predictions"]}, set(metadata["supported_fsas"]))

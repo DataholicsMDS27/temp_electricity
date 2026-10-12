@@ -21,6 +21,8 @@ class Predictor(Protocol):
 class MockPredictor:
     model_version = "synthetic-demo-v1"
     is_mock = True
+    pred_min = 0.0
+    pred_max = 4.0
     time_convention = "Typical local hour; timezone convention pending model integration"
 
     def predict_batch(self, scenario: Scenario, fsa_codes: list[str]) -> list[Prediction]:
