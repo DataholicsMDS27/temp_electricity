@@ -129,6 +129,36 @@ class ParquetPredictor:
             )
         return results
 
+    def temperature_curve(
+        self,
+        day_type: str,
+        hour: int,
+        customer_type: int,
+        fsa: str | None = None,
+    ) -> list[tuple[int, float]]:
+        """Predicted consumption at every temperature for one hour and day type.
+
+        Without an FSA this is the unweighted mean across FSAs, a typical-FSA
+        curve rather than a provincial total.
+        """
+        day = 0 if day_type == "weekday" else 1
+        block = self._grid[customer_type, day, hour + 1]  # (temperatures, fsas)
+        if fsa is not None:
+            index = self._fsa_index.get(fsa.strip().upper())
+            if index is None:
+                raise KeyError(fsa)
+            values = block[:, index]
+        else:
+            valid = ~np.isnan(block)
+            counts = valid.sum(axis=1)
+            sums = np.where(valid, block, 0.0).sum(axis=1)
+            values = np.where(counts > 0, sums / np.maximum(counts, 1), np.nan)
+        return [
+            (self._temp_min + offset, float(value))
+            for offset, value in enumerate(values)
+            if not np.isnan(value)
+        ]
+
 
 def create_predictor() -> ParquetPredictor:
     path = os.environ.get("ENERGY_PREDICTIONS_PARQUET")

@@ -20,6 +20,8 @@ export interface Metadata {
   interval_minutes: number; unit: string; metric: string;
   time_convention: string; legend: { min: number; max: number };
 }
+export interface CurvePoint { temperature_c: number; value: number }
+export interface CurveResponse { unit: string; scope: 'fsa' | 'all_fsas_mean'; fsa: string | null; points: CurvePoint[] }
 export const hourLabel = (hour: number) => `${String(hour).padStart(2, '0')}:00`;
 export const intervalLabel = (hour: number) => `${hourLabel(hour)}–${hourLabel((hour + 1) % 24)}`;
 export const sameScenario = (

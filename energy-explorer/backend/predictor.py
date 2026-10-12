@@ -39,3 +39,14 @@ class MockPredictor:
             value = (0.65 + 0.32 * morning + 0.68 * evening + weather) * geographic_factor * day_factor
             result.append(Prediction(fsa=fsa, value=round(value, 3), status="ok"))
         return result
+
+    def temperature_curve(self, day_type, hour, customer_type, fsa=None):
+        """Demo curve: the same synthetic formula evaluated at each temperature."""
+        fsas = [fsa] if fsa else ["M5V", "K1A", "P0A", "N6A", "L4W"]
+        points = []
+        for temperature in range(-30, 31):
+            rows = self.predict_batch(
+                Scenario(temperature_c=temperature, day_type=day_type, hour=hour, customer_type=customer_type), fsas
+            )
+            points.append((temperature, sum(row.value for row in rows) / len(rows)))
+        return points

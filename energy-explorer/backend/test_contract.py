@@ -34,6 +34,17 @@ class ContractTests(unittest.TestCase):
         for bad in ({'temperature_c': -31}, {'temperature_c': 31}, {'temperature_c': 1.5}, {'hour': 24}, {'hour': True}, {'day_type': 'monday'}, {'customer_type': 3}, {'extra': 1}):
             self.assertEqual(self.client.post('/api/v1/predictions', json=self.scenario(**bad)).status_code, 422)
 
+    def test_temperature_curve(self):
+        response = self.client.get('/api/v1/curve', params={'day_type': 'weekday', 'hour': 14, 'customer_type': 2})
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertEqual(body['scope'], 'all_fsas_mean')
+        self.assertEqual([p['temperature_c'] for p in body['points']], list(range(-30, 31)))
+        one = self.client.get('/api/v1/curve', params={'day_type': 'weekend', 'hour': 0, 'fsa': 'M5V'}).json()
+        self.assertEqual(one['scope'], 'fsa')
+        for bad in ({'day_type': 'monday', 'hour': 1}, {'day_type': 'weekday', 'hour': 24}, {'day_type': 'weekday', 'hour': 1, 'customer_type': 3}, {'day_type': 'weekday', 'hour': 1, 'fsa': 'xx'}):
+            self.assertEqual(self.client.get('/api/v1/curve', params=bad).status_code, 422)
+
     def test_missing_predictions_are_explicit(self):
         provider = self.client.app.state.predictor
         original = provider.predict_batch
