@@ -6,6 +6,7 @@ dependencies = [
     "cdsapi>=0.7.7",
     "fastapi>=0.143.0",
     "geopandas>=1.2.0",
+    "holidays>=0.106",
     "ipykernel>=7.4.0",
     "jupyter>=1.1.1",
     "jupyterlab>=4.6.4",
