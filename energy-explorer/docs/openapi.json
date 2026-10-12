@@ -1,0 +1,266 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Ontario Energy Explorer",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/metadata": {
+      "get": {
+        "summary": "Metadata",
+        "operationId": "metadata_api_v1_metadata_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/predictions": {
+      "post": {
+        "summary": "Predict",
+        "operationId": "predict_api_v1_predictions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Scenario"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PredictionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Prediction": {
+        "properties": {
+          "fsa": {
+            "type": "string",
+            "pattern": "^[KLMNP][0-9][A-Z]$",
+            "title": "Fsa"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "unsupported",
+              "unavailable"
+            ],
+            "title": "Status",
+            "default": "ok"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fsa"
+        ],
+        "title": "Prediction"
+      },
+      "PredictionResponse": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "title": "Request Id"
+          },
+          "scenario": {
+            "$ref": "#/components/schemas/Scenario"
+          },
+          "model_version": {
+            "type": "string",
+            "title": "Model Version"
+          },
+          "is_mock": {
+            "type": "boolean",
+            "title": "Is Mock"
+          },
+          "boundary_version": {
+            "type": "string",
+            "title": "Boundary Version",
+            "default": "statcan-2021"
+          },
+          "metric": {
+            "type": "string",
+            "const": "average_energy_per_customer",
+            "title": "Metric",
+            "default": "average_energy_per_customer"
+          },
+          "unit": {
+            "type": "string",
+            "const": "kWh",
+            "title": "Unit",
+            "default": "kWh"
+          },
+          "interval_minutes": {
+            "type": "integer",
+            "title": "Interval Minutes",
+            "default": 60
+          },
+          "time_convention": {
+            "type": "string",
+            "title": "Time Convention"
+          },
+          "predictions": {
+            "items": {
+              "$ref": "#/components/schemas/Prediction"
+            },
+            "type": "array",
+            "title": "Predictions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "request_id",
+          "scenario",
+          "model_version",
+          "is_mock",
+          "time_convention",
+          "predictions"
+        ],
+        "title": "PredictionResponse"
+      },
+      "Scenario": {
+        "properties": {
+          "temperature_c": {
+            "type": "integer",
+            "maximum": 35.0,
+            "minimum": -40.0,
+            "title": "Temperature C"
+          },
+          "day_type": {
+            "type": "string",
+            "enum": [
+              "weekday",
+              "weekend"
+            ],
+            "title": "Day Type"
+          },
+          "hour": {
+            "type": "integer",
+            "maximum": 23.0,
+            "minimum": 0.0,
+            "title": "Hour"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "temperature_c",
+          "day_type",
+          "hour"
+        ],
+        "title": "Scenario"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

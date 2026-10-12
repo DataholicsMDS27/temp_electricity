@@ -1,5 +1,11 @@
 # temp_electricity
 
+## Interactive explorer
+
+The desktop UI and deployable Python API are in [`energy-explorer/`](energy-explorer/README.md). The UI accepts temperature, weekday/weekend, and an hourly interval, then maps average kWh per customer across Ontario FSAs. Predictions are explicitly synthetic until a trained provider is connected.
+
+See [`MODEL_INTEGRATION.md`](energy-explorer/docs/MODEL_INTEGRATION.md) for the model adapter contract, preprocessing and artifact setup, local and production testing, and deployment instructions. The root `render.yaml` deploys the explorer subdirectory independently of the research environment.
+
 ## Overview
 Temperature Electricity (placeholder name) is an Ontario electricity consumption mapping tool. The goal is
 to map the effect of temperature changes on electricity consumption at the Forward Sortation Area (FSA) level
