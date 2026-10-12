@@ -4,7 +4,7 @@ All commands below run from `energy-explorer/`, not the repository root. The res
 
 ## 1. Agree on the prediction contract
 
-The API accepts `{"temperature_c":22,"day_type":"weekday","hour":14}`. Temperature is an integer from −40 to 35 °C applied to every FSA. Day type is `weekday` or `weekend`. Hour is 0–23 in 24-hour time and denotes the start of a one-hour interval; 23 means 23:00–00:00.
+The API accepts `{"temperature_c":22,"day_type":"weekday","hour":14}`. Temperature is an integer from −30 to 30 °C applied to every FSA. Day type is `weekday` or `weekend`. Hour is 0–23 in 24-hour time and denotes the start of a one-hour interval; 23 means 23:00–00:00.
 
 Return **average kWh per customer during that hour**, not total FSA consumption or instantaneous kW. Derive the training target using the appropriate customer denominator for each observation; distinguish residential customers from small business customers if the source combines them. Document aggregation, missing values, and denominator changes. The interface describes a typical day type, not a forecast for a specific date. If training uses month, season, holidays, or other features, define a defensible aggregation or fixed scenario internally; do not quietly invent a calendar date.
 
@@ -102,11 +102,11 @@ curl --fail -X POST http://127.0.0.1:10000/api/v1/predictions \
 
 ## 5. Evaluate accuracy separately
 
-Use a held-out time period and avoid leakage between training and test observations. Compare against simple baselines and report MAE/RMSE in kWh/customer, with breakdowns by FSA, temperature range, hour, and day type. Check training coverage at −40 and 35 °C; document extrapolation or change API limits and slider metadata together if unsupported. Integration passing says nothing about accuracy or uncertainty. Calibrate the fixed legend in `backend/main.py` using the real output range; remove its demo-only note. Keep regional averages separate from provincial totals.
+Use a held-out time period and avoid leakage between training and test observations. Compare against simple baselines and report MAE/RMSE in kWh/customer, with breakdowns by FSA, temperature range, hour, and day type. Check training coverage at −30 and 30 °C; document extrapolation or change API limits and slider metadata together if unsupported. Integration passing says nothing about accuracy or uncertainty. Calibrate the fixed legend in `backend/main.py` using the real output range; remove its demo-only note. Keep regional averages separate from provincial totals.
 
 ## 6. Deploy the model
 
-The root `render.yaml` uses `rootDir: energy-explorer`, Docker, port 10000, and `/api/health`. A manually configured Render service needs the same root directory and Dockerfile path `./Dockerfile`.
+The root `render.yaml` uses Docker with the repository root as build context, Dockerfile path `./energy-explorer/Dockerfile`, port 10000, and `/api/health`. A manually configured Render service needs the same Dockerfile path and an empty Root Directory.
 
 1. Commit provider code, dependency updates, and the artifact packaging configuration to the deployed branch.
 2. Set `ENERGY_PREDICTOR=backend.model_provider:create_predictor` in Render's Environment settings. Keep any artifact credentials in secret environment variables, not Git.

@@ -2,9 +2,9 @@
 
 ## Interactive explorer
 
-The desktop UI and deployable Python API are in [`energy-explorer/`](energy-explorer/README.md). The UI accepts temperature, weekday/weekend, and an hourly interval, then maps average kWh per customer across Ontario FSAs. Predictions are explicitly synthetic until a trained provider is connected.
+The desktop UI and deployable Python API are in [`energy-explorer/`](energy-explorer/README.md). The UI accepts temperature, weekday/weekend, and an hourly interval, then maps average kWh per customer across Ontario FSAs. Predictions come from a LightGBM model trained on IESO consumption and ERA5-Land temperature data, precomputed for every FSA, customer type, day type, hour and temperature, and stored in `data/final_predictions_22-26/grid_predictions.parquet`.
 
-See [`MODEL_INTEGRATION.md`](energy-explorer/docs/MODEL_INTEGRATION.md) for the model adapter contract, preprocessing and artifact setup, local and production testing, and deployment instructions. The root `render.yaml` deploys the explorer subdirectory independently of the research environment.
+See [`MODEL_INTEGRATION.md`](energy-explorer/docs/MODEL_INTEGRATION.md) for the model adapter contract, preprocessing and artifact setup, local and production testing, and deployment instructions. The root `render.yaml` deploys the explorer with the repository root as the Docker build context, so the image can include the predictions file.
 
 ## Overview
 Temperature Electricity (placeholder name) is an Ontario electricity consumption mapping tool. The goal is

@@ -61,7 +61,7 @@ export function EnergyMap({ geometry, dark, result, selected, onSelect, legend }
   };
   const style = useMemo(() => fallback ? fallbackStyle(dark) : `/data/basemap-${dark ? 'dark' : 'light'}.json`, [dark, fallback]);
   return <>
-    <Map ref={ref} mapStyle={style} initialViewState={{ bounds: ALL, fitBoundsOptions: { padding: { top: 50, bottom: 80, left: 30, right: 30 } } }}
+    <Map ref={ref} mapStyle={style} initialViewState={{ bounds: SOUTH, fitBoundsOptions: { padding: { top: 50, bottom: 80, left: 30, right: 30 } } }}
       minZoom={3} maxZoom={13} maxPitch={0} dragRotate={false} touchZoomRotate={false}
       interactiveLayerIds={['fsa-fill']} cursor={hover ? 'pointer' : 'grab'}
       onLoad={() => setLoaded(true)} onStyleData={() => {
@@ -93,7 +93,7 @@ export function EnergyMap({ geometry, dark, result, selected, onSelect, legend }
         <div className="legend-title">Average consumption <span>kWh / customer</span></div>
         <div className="legend-ramp" style={{ background: `linear-gradient(to right, ${PALETTE.join(',')})` }} />
         <div className="legend-ticks">{[0, 1, 2, 3, 4, 5].map(i => <span key={i}>{(legend.min + (legend.max - legend.min) * i / 5).toFixed(1)}{i === 5 ? '+' : ''}</span>)}</div>
-        <div className="legend-footer"><span><i /> No prediction</span><span>Fixed scale · 1-hour interval</span></div>
+        <div className="legend-footer"><span><i /> No prediction</span><span>Fixed scale · {legend.max}+ shown darkest</span></div>
       </div>
       {selected && <div className="selection-panel" aria-live="polite">
         <div className="selection-title"><span><MapPin size={15} /> {selected.fsa}</span><button aria-label="Close FSA details" onClick={() => onSelect(null)}><X size={16} /></button></div>

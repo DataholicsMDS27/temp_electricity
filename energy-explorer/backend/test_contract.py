@@ -23,15 +23,15 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(first['interval_minutes'], 60)
         self.assertEqual(first['unit'], 'kWh')
         self.assertEqual(first['metric'], 'average_energy_per_customer')
-        self.assertEqual(first['scenario'], self.scenario())
+        self.assertEqual(first['scenario'], {**self.scenario(), 'customer_type': 1})
         self.assertEqual(first['predictions'], second['predictions'])
         self.assertEqual({p['fsa'] for p in first['predictions']}, set(metadata['supported_fsas']))
 
     def test_input_bounds_and_midnight(self):
-        for t in (-40, 35):
+        for t in (-30, 30):
             response = self.client.post('/api/v1/predictions', json=self.scenario(temperature_c=t, hour=23))
             self.assertEqual(response.status_code, 200)
-        for bad in ({'temperature_c': -41}, {'temperature_c': 36}, {'temperature_c': 1.5}, {'hour': 24}, {'hour': True}, {'day_type': 'monday'}, {'extra': 1}):
+        for bad in ({'temperature_c': -31}, {'temperature_c': 31}, {'temperature_c': 1.5}, {'hour': 24}, {'hour': True}, {'day_type': 'monday'}, {'customer_type': 3}, {'extra': 1}):
             self.assertEqual(self.client.post('/api/v1/predictions', json=self.scenario(**bad)).status_code, 422)
 
     def test_missing_predictions_are_explicit(self):

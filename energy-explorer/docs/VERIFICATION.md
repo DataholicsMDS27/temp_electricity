@@ -3,8 +3,8 @@
 ## Automated checks
 
 - TypeScript checking and the production Vite build pass (`npm run build`).
-- Four backend contract tests pass (`.venv/bin/python -m unittest backend.test_contract`): deterministic Ontario-wide batches, valid temperature extremes and midnight hours, invalid-input rejection, explicit unsupported FSAs, and invalid-provider-output handling.
-- Live API/map join verification passes for 520 FSAs with a -40 °C, weekend, 23:00–00:00 scenario (`npm run verify`).
+- Ten backend tests pass (`.venv/bin/python -m unittest backend.test_contract backend.test_production backend.test_parquet_predictor`), including Parquet predictor lookups. The contract tests cover: deterministic Ontario-wide batches, valid temperature extremes and midnight hours, invalid-input rejection, explicit unsupported FSAs, and invalid-provider-output handling.
+- Live API/map join verification passes for 520 FSAs with a -30 °C, weekend, 23:00–00:00 scenario (`npm run verify`).
 - Dependency installation audit reports zero known npm vulnerabilities after updating MapLibre to 6.13.0.
 
 ## Browser checks
@@ -25,4 +25,4 @@ Screenshots are saved locally in `artifacts/light-desktop.jpg`, `artifacts/dark-
 
 ## Intentional limitations
 
-The prediction provider is a synthetic demonstration; no trained model or observed consumption data is included. Confirm the training timezone, reconcile consumption FSAs against 2021 census geography, and calibrate the fixed legend before connecting the real model. External basemap services are used for detailed context; the app bundles a simpler geographic fallback. MapLibre's rendering bundle produces a Vite chunk-size advisory, without preventing the build.
+This file predates the trained model. With `ENERGY_PREDICTOR` unset the provider is a synthetic demonstration; the deployed app uses the precomputed LightGBM predictions, whose accuracy is not reported here. Confirm the training timezone, reconcile consumption FSAs against 2021 census geography, and calibrate the fixed legend before connecting the real model. External basemap services are used for detailed context; the app bundles a simpler geographic fallback. MapLibre's rendering bundle produces a Vite chunk-size advisory, without preventing the build.

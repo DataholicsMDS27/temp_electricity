@@ -23,3 +23,5 @@
 @media(prefers-reduced-motion:reduce){.celestial{transition:none}.celestial-active{animation:none}}
 @media(max-height:950px) and (min-width:900px){.sky{--sky-top:94px}}
 @media(max-height:850px) and (min-width:900px){.sky{--sky-top:78px}}
+
+.about-dialog h3{font-size:13px;letter-spacing:-.2px;margin:22px 0 4px}.about-dialog ul{margin:6px 0;padding-left:18px}.about-dialog li{font-size:12px;color:var(--muted);line-height:1.7;margin:8px 0}.about-links{display:flex;flex-wrap:wrap;gap:6px 16px}
