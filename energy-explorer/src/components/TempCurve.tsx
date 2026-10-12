@@ -3,7 +3,7 @@ import { getCurve } from '../api';
 import type { CurvePoint, Scenario } from '../types';
 import { intervalLabel } from '../types';
 
-const W = 270, H = 112, L = 30, R = 8, T = 10, B = 20;
+const W = 270, H = 96, L = 30, R = 8, T = 10, B = 20;
 
 interface Props { scenario: Scenario; fsa: string | null }
 
