@@ -324,13 +324,7 @@ export default function App() {
       <main className="workspace">
         <aside className="scenario-panel" aria-label="Scenario controls">
           <div className="panel-heading">
-            <div className="eyebrow">YOUR SCENARIO</div>
             <h1>What if?</h1>
-            <p>
-              A temperature. A moment.
-              <br />
-              An energy picture of Ontario.
-            </p>
           </div>
 
           {/* Temperature */}
@@ -550,14 +544,6 @@ export default function App() {
             )}
           </div>
 
-          <div className="sidebar-footer">
-            <FlaskConical size={16} />
-            <p>
-              A what-if explorer.
-              <br />
-              <span>One temperature across Ontario.</span>
-            </p>
-          </div>
         </aside>
 
         <section
@@ -758,18 +744,13 @@ export default function App() {
                 forecast for a specific date.
               </p>
 
-              <p>
-                <strong>
-                  {visibleMock === false
-                    ? 'Model provider connected.'
-                    : 'Demo predictions are synthetic.'}
-                </strong>{' '}
-                {visibleMock === false
-                  ? `Model: ${
-                      result?.model_version ?? metadata?.model_version
-                    }`
-                  : 'The demo formula is not trained on consumption data and should only be used to demonstrate the interface.'}
-              </p>
+              {visibleMock !== false && (
+                <p>
+                  <strong>Demo predictions are synthetic.</strong>{' '}
+                  The demo formula is not trained on consumption data and
+                  should only be used to demonstrate the interface.
+                </p>
+              )}
 
               {visibleMock === false && (
                 <>
