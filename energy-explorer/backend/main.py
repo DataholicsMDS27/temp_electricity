@@ -6,7 +6,9 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import FastAPI, HTTPException, Request
+from typing import Literal
+
+from fastapi import FastAPI, HTTPException, Query, Request
 from starlette.concurrency import run_in_threadpool
 from .predictor import MockPredictor
 from .schemas import Prediction, PredictionResponse, Scenario
@@ -57,6 +59,31 @@ def metadata(request: Request):
             "unit": "kWh/customer",
             "note": "Range of precomputed predictions",
             },
+    }
+
+
+@app.get("/api/v1/curve")
+async def temperature_curve(
+    request: Request,
+    day_type: Literal["weekday", "weekend"],
+    hour: int = Query(ge=0, le=23),
+    customer_type: int = Query(default=1, ge=1, le=2),
+    fsa: str | None = Query(default=None, pattern=r"^[KLMNP][0-9][A-Z]$"),
+):
+    """Consumption across all temperatures for one hour, for one FSA or a typical FSA."""
+    predictor = request.app.state.predictor
+    curve = getattr(predictor, "temperature_curve", None)
+    if curve is None:
+        raise HTTPException(status_code=404, detail="This model provider does not offer temperature curves.")
+    try:
+        points = await run_in_threadpool(curve, day_type, hour, customer_type, fsa)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Unknown FSA.") from None
+    return {
+        "unit": "kWh",
+        "scope": "fsa" if fsa else "all_fsas_mean",
+        "fsa": fsa,
+        "points": [{"temperature_c": t, "value": round(v, 4)} for t, v in points],
     }
 
 

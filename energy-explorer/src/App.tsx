@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { TempCurve } from './components/TempCurve';
 import * as Slider from '@radix-ui/react-slider';
 import * as RadioGroup from '@radix-ui/react-radio-group';
 import * as Dialog from '@radix-ui/react-dialog';
@@ -514,6 +515,8 @@ export default function App() {
               <span>23:00</span>
             </div>
           </section>
+
+          <TempCurve scenario={scenario} fsa={selected} />
 
           {/* Automatic prediction status and retry. */}
           <div className="scenario-submit">

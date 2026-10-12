@@ -53,6 +53,15 @@ class ParquetPredictorTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.predictor.predict_batch(Scenario(temperature_c=0, day_type="weekday", hour=3), ["M5V"])
 
+    def test_temperature_curve_for_one_fsa_and_the_mean(self):
+        one = self.predictor.temperature_curve("weekday", 14, 1, "M5V")
+        self.assertEqual([(t, round(v, 3)) for t, v in one], [(-30, 3.0), (22, 1.5)])
+        mean = dict(self.predictor.temperature_curve("weekday", 14, 1))
+        self.assertAlmostEqual(mean[22], 2.0)  # (1.5 + 2.5) / 2
+        self.assertAlmostEqual(mean[-30], 3.0)  # only M5V has a value here
+        with self.assertRaises(KeyError):
+            self.predictor.temperature_curve("weekday", 14, 1, "ZZZ")
+
     def test_missing_file_is_a_clear_error(self):
         with self.assertRaises(FileNotFoundError):
             ParquetPredictor("does-not-exist.parquet")
