@@ -1,15 +1,15 @@
-# Build context is the repository root; only the explorer and its predictions are needed.
-*
-!energy-explorer
-!data/final_predictions_22-26/grid_predictions.parquet
-
-energy-explorer/.git
-energy-explorer/.venv
-energy-explorer/node_modules
-energy-explorer/dist
-energy-explorer/artifacts
-energy-explorer/.env
-energy-explorer/.env.*
+# Build context is the repository root (see render.yaml). Plain excludes only,
+# with no "!" re-includes, so every builder treats the file the same way.
+.git
+.venv
+**/.venv
+**/node_modules
+**/dist
+**/artifacts
+**/.env
+**/.env.*
 **/__pycache__
 **/*.pyc
 **/*.tsbuildinfo
+*.ipynb
+src
